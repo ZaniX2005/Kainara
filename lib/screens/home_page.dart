@@ -27,9 +27,9 @@ class _HomePageState extends State<HomePage> {
   // - Teks "Warna yang Pas..." di posisi y≈216*s
   // - Search bar di topInset + 73*s (expand) → +15 (collapse)
   static const _banners = [
-    'assets/images/home_hero_banner.png',
-    'assets/images/home_hero_banner.png',
-    'assets/images/home_hero_banner.png',
+    'assets/images/banner.png',
+    'assets/images/banner.png',
+    'assets/images/banner.png',
   ];
 
   // Banner dipotong dari referensi Home.png:

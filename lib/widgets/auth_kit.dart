@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'auth_header.dart';
+
 /// Palet warna yang diambil langsung dari file desain (390 x 844).
 class AuthColors {
   static const cream = Color(0xFFFFFBF6); // #FFFBF6
@@ -76,20 +78,7 @@ class AuthScaffold extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  const Positioned.fill(
-                    child: ColoredBox(color: AuthColors.cream),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 420 * s,
-                    child: Image.asset(
-                      'assets/images/auth_header.png',
-                      fit: BoxFit.fill,
-                      filterQuality: FilterQuality.high,
-                    ),
-                  ),
+                  Positioned.fill(child: AuthHeader(s: s)),
                   Positioned(
                     left: 0,
                     right: 0,

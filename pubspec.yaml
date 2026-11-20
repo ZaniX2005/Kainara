@@ -70,7 +70,6 @@ flutter:
   assets:
     - assets/images/motif/
     - assets/images/outfit/
-    - assets/images/home_hero_banner.png
     - assets/images/
 
   fonts:
