@@ -51,6 +51,7 @@ class _VerifiedPageState extends State<VerifiedPage> {
   Widget build(BuildContext context) {
     return AuthScaffold(
       overlays: (s) => [
+        authGreeting(s, 'Tabik Pun, selamat\ndatang di KAINARA'),
         ...authTitle(
           s,
           text: 'Proses verifikasi',

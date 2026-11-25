@@ -6,6 +6,14 @@ import 'profile_store.dart';
 
 enum AuthResult { ok, emailNotFound, wrongPassword }
 
+enum AccountUpdateResult {
+  ok,
+  invalidEmail,
+  emailAlreadyExists,
+  accountNotFound,
+  weakPassword,
+}
+
 class _User {
   String name, password;
   _User(this.name, this.password);
@@ -51,8 +59,48 @@ class AuthStore extends ChangeNotifier {
       _users.containsKey(email.trim().toLowerCase());
 
   void resetPassword(String email, String newPassword) {
-    final u = _users[email.trim().toLowerCase()];
+    final key = email.trim().toLowerCase();
+    final u = _users[key];
     if (u != null) u.password = newPassword;
+    if (ProfileStore.instance.email.toLowerCase() == key) {
+      ProfileStore.instance.update(password: newPassword);
+    }
+  }
+
+  AccountUpdateResult updateEmail(String email) {
+    final value = email.trim();
+    if (!validEmail(value)) return AccountUpdateResult.invalidEmail;
+
+    final currentKey = ProfileStore.instance.email.trim().toLowerCase();
+    final nextKey = value.toLowerCase();
+    final user = _users[currentKey];
+    if (user == null) return AccountUpdateResult.accountNotFound;
+    if (nextKey == currentKey) return AccountUpdateResult.ok;
+    if (_users.containsKey(nextKey)) {
+      return AccountUpdateResult.emailAlreadyExists;
+    }
+
+    _users.remove(currentKey);
+    _users[nextKey] = user;
+    ProfileStore.instance.update(email: value, verified: false);
+    return AccountUpdateResult.ok;
+  }
+
+  AccountUpdateResult updatePassword(String password) {
+    if (password.length < 6) return AccountUpdateResult.weakPassword;
+    final user = _users[ProfileStore.instance.email.trim().toLowerCase()];
+    if (user == null) return AccountUpdateResult.accountNotFound;
+    user.password = password;
+    ProfileStore.instance.update(password: password);
+    return AccountUpdateResult.ok;
+  }
+
+  bool updateName(String name) {
+    final user = _users[ProfileStore.instance.email.trim().toLowerCase()];
+    if (user == null) return false;
+    user.name = name.trim();
+    ProfileStore.instance.update(name: user.name);
+    return true;
   }
 
   void logout() {

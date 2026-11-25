@@ -39,24 +39,21 @@ class SlantedTabs extends StatelessWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => onChanged(i),
-            child: CustomPaint(
-              painter: _TabPainter(active: active),
-              child: Center(
-                child: Padding(
-                  // Teks di desain digeser: tab abu-abu ke kanan,
-                  // tab aktif ke kiri dari titik tengah bentuknya.
-                  padding: EdgeInsets.only(
-                    left: active ? 0 : 15,
-                    right: active ? 15 : 0,
-                  ),
-                  child: Text(
-                    labels[i],
-                    maxLines: 1,
-                    style: AppText.serif(
-                      16,
-                      color: AppColors.maroon,
-                      weight: active ? FontWeight.w600 : FontWeight.w500,
-                    ),
+            child: Center(
+              child: Padding(
+                // Teks di desain digeser: tab abu-abu ke kanan,
+                // tab aktif ke kiri dari titik tengah bentuknya.
+                padding: EdgeInsets.only(
+                  left: active ? 0 : 15,
+                  right: active ? 15 : 0,
+                ),
+                child: Text(
+                  labels[i],
+                  maxLines: 1,
+                  style: AppText.serif(
+                    16,
+                    color: AppColors.maroon,
+                    weight: active ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
               ),
@@ -69,6 +66,13 @@ class SlantedTabs extends StatelessWidget {
           height: height,
           child: Stack(
             children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/home_tabs_overlay.png',
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
               tab(other, Rect.fromLTWH(leftLeft, 0, leftW, height), false),
               tab(selected, Rect.fromLTWH(rightLeft, 0, rightW, height), true),
             ],
@@ -77,40 +81,4 @@ class SlantedTabs extends StatelessWidget {
       },
     );
   }
-}
-
-class _TabPainter extends CustomPainter {
-  final bool active;
-  const _TabPainter({required this.active});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const slant = 14.0;
-    final w = size.width, h = size.height;
-    final path = Path()
-      ..moveTo(0, h)
-      ..lineTo(slant, 0)
-      ..lineTo(active ? w : w - slant, 0)
-      ..lineTo(w, h)
-      ..close();
-
-    if (active) {
-      canvas.drawPath(path, Paint()..color = AppColors.page);
-    } else {
-      canvas.drawShadow(path, Colors.black45, 3, false);
-      canvas.drawPath(
-        path,
-        Paint()
-          ..shader = const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            stops: [0, 0.65, 1],
-            colors: [Color(0xFF7A7A7A), Color(0xFFE6E6E6), Color(0xFFFFFBF6)],
-          ).createShader(Rect.fromLTWH(0, 0, w, h)),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _TabPainter old) => old.active != active;
 }

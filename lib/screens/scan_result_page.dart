@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../data/dummy_data.dart';
 import '../data/favorites_store.dart';
+import '../models/motif.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import '../widgets/asset_img.dart';
@@ -20,54 +21,146 @@ class ScanResultPage extends StatefulWidget {
 class _ScanResultPageState extends State<ScanResultPage> {
   bool _useOpen = false;
   bool _careOpen = false;
+  bool _outfitOpen = true;
 
   static const _grey = Color(0xFFDADADA);
 
-  Widget _topBtn(Widget icon, VoidCallback onTap) {
+  Widget _topBtn(
+    Widget icon,
+    VoidCallback onTap, {
+    Color background = const Color(0xE6EDEDED),
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 40,
         height: 40,
-        decoration: const BoxDecoration(
-          color: Color(0xE6EDEDED),
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
         child: Center(child: icon),
       ),
     );
   }
 
-  Widget _row(String label, String value, {double minH = 0}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 130,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              label,
-              style: AppText.serif(15, color: const Color(0xFF1E1E1E)),
+  Widget _componentPanel(Motif motif) {
+    final components = [
+      ('assets/images/outfit/outfit_6.png', 'Siger Lampung', motif.region),
+      ('assets/images/outfit/outfit_3.png', 'Kebaya', 'Putih'),
+      (motif.image, 'Kain Tapis', motif.name),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.maroon,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'KOMPONEN OUTFIT',
+            style: AppText.sans(
+              11,
+              color: Colors.white,
+              weight: FontWeight.w700,
+              letterSpacing: 0.3,
             ),
           ),
-        ),
-        Expanded(
-          child: Container(
-            constraints: BoxConstraints(minHeight: minH),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _grey,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              value,
-              style: AppText.sans(
-                12,
-                color: const Color(0xFF2B2B2B),
-                height: 1.6,
+          const SizedBox(height: 8),
+          for (var i = 0; i < components.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Expanded(
+              child: _componentItem(
+                image: components[i].$1,
+                title: components[i].$2,
+                subtitle: components[i].$3,
               ),
             ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _componentItem({
+    required String image,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              width: 42,
+              height: double.infinity,
+              child: AssetImg(image, alignment: Alignment.topCenter),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.serif(
+                    9,
+                    color: AppColors.maroon,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.sans(8, color: AppColors.dark),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _clothingInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: const Color(0xFFC7A33E)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppText.sans(10, color: const Color(0xFF6B625A)),
+              ),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.sans(
+                  15,
+                  color: const Color(0xFF292522),
+                  weight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -145,6 +238,161 @@ class _ScanResultPageState extends State<ScanResultPage> {
     );
   }
 
+  Widget _shareOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 68,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Icon(icon, color: Colors.white, size: 27),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: AppText.sans(
+                10,
+                color: const Color(0xFF272727),
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openShareSheet(Motif motif) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Spacer(),
+                  Text(
+                    'Share ke',
+                    style: AppText.serif(
+                      20,
+                      color: Colors.black,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close, color: Colors.black54),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                alignment: WrapAlignment.spaceAround,
+                spacing: 8,
+                runSpacing: 18,
+                children: [
+                  _shareOption(
+                    icon: Icons.chat,
+                    label: 'WhatsApp',
+                    color: const Color(0xFF25D366),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(
+                        text: 'Lihat motif tapis ${motif.name} di KAINARA',
+                      ),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.camera_alt,
+                    label: 'Story\nInstagram',
+                    color: const Color(0xFFE4405F),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Feed\nInstagram',
+                    color: const Color(0xFF833AB4),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.send,
+                    label: 'Telegram',
+                    color: const Color(0xFF37AEE2),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.facebook,
+                    label: 'Facebook',
+                    color: const Color(0xFF1877F2),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.link,
+                    label: 'Salin Link',
+                    color: const Color(0xFFE7E7E7),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.download,
+                    label: 'Simpan Foto',
+                    color: const Color(0xFFE7E7E7),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                  _shareOption(
+                    icon: Icons.more_horiz,
+                    label: 'Lainnya',
+                    color: const Color(0xFFE7E7E7),
+                    onTap: () => SharePlus.instance.share(
+                      ShareParams(text: 'Motif tapis ${motif.name}'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
@@ -160,35 +408,22 @@ class _ScanResultPageState extends State<ScanResultPage> {
       body: ListView(
         padding: EdgeInsets.only(bottom: 120 + mq.padding.bottom),
         children: [
-          // Foto + tombol atas
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(color: AppColors.maroon, height: mq.padding.top),
-              Padding(
-                padding: EdgeInsets.only(top: mq.padding.top),
-                child: SizedBox(
-                  height: 320 * s,
-                  width: double.infinity,
-                  child: AssetImg(motif.headerImage),
-                ),
-              ),
-              Positioned(
-                top: mq.padding.top + 12,
-                left: 12,
-                child: _topBtn(
-                  const Icon(
-                    Icons.chevron_left,
-                    color: AppColors.maroon,
-                    size: 26,
-                  ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, mq.padding.top + 8, 20, 12),
+            child: Row(
+              children: [
+                _topBtn(
+                  const Icon(Icons.chevron_left, color: Colors.white, size: 26),
                   () => context.canPop() ? context.pop() : context.go('/'),
+                  background: AppColors.maroon,
                 ),
-              ),
-              Positioned(
-                top: mq.padding.top + 12,
-                right: 12,
-                child: ListenableBuilder(
+                const Spacer(),
+                _topBtn(
+                  const Icon(Icons.share, color: AppColors.dark, size: 18),
+                  () => _openShareSheet(motif),
+                ),
+                const SizedBox(width: 8),
+                ListenableBuilder(
                   listenable: FavoritesStore.instance,
                   builder: (_, _) {
                     final liked = FavoritesStore.instance.isFav(favKey);
@@ -199,230 +434,241 @@ class _ScanResultPageState extends State<ScanResultPage> {
                         size: 22,
                       ),
                       () => FavoritesStore.instance.toggle(favKey),
+                      background: Colors.white,
                     );
                   },
-                ),
-              ),
-              // Panel krem melengkung
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: -1,
-                child: Container(
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: AppColors.page,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Share + lihat motif lain
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 18, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () => SharePlus.instance.share(
-                        ShareParams(
-                          text: 'Lihat motif tapis ${motif.name} di KAINARA',
-                        ),
-                      ),
-                      child: Container(
-                        width: 44,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8E8E8),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.share,
-                          size: 18,
-                          color: AppColors.dark,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Share motif',
-                      style: AppText.sans(10, color: Colors.black54),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => context.push('/catalog'),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Row(
-                      children: [
-                        Text(
-                          'lihat motif lain',
-                          style: AppText.sans(
-                            12,
-                            color: Colors.black,
-                            weight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right,
-                          size: 16,
-                          color: Colors.black,
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
 
-          // Nama + akurasi
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    motif.name,
-                    style: AppText.serif(
-                      26,
-                      color: Colors.black,
-                      weight: FontWeight.w700,
+            child: SizedBox(
+              height: 300 * s,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: SizedBox.expand(
+                        child: AssetImg(
+                          motif.headerImage,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
                     ),
                   ),
+                  SizedBox(width: 14 * s),
+                  Expanded(flex: 2, child: _componentPanel(motif)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              motif.name,
+              style: AppText.serif(
+                24,
+                color: Colors.black,
+                weight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 12),
+            child: Text(
+              motif.description,
+              style: AppText.sans(
+                13,
+                color: const Color(0xFF36322E),
+                height: 1.35,
+              ),
+            ),
+          ),
+
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: AppColors.maroon,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
+            child: Text(
+              'Informasi Pakaian',
+              style: AppText.serif(
+                18,
+                color: Colors.black,
+                weight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 0, 18, 18),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _clothingInfoItem(
+                        icon: Icons.map,
+                        label: 'Daerah',
+                        value: 'Lampung',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _clothingInfoItem(
+                        icon: Icons.checkroom,
+                        label: 'Adat',
+                        value: motif.region,
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                  width: 9,
-                  height: 9,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1E9E5A),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'akurasi ${widget.accuracy}%',
-                  style: AppText.sans(
-                    14,
-                    color: Colors.black,
-                    weight: FontWeight.w600,
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _clothingInfoItem(
+                        icon: Icons.card_giftcard,
+                        label: 'Jenis',
+                        value: 'Busana Adat',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _clothingInfoItem(
+                        icon: Icons.auto_awesome,
+                        label: 'Ciri khas',
+                        value: '${motif.name} & Tapis',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           Container(
             height: 1,
-            margin: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            color: const Color(0xFFE2E2DA),
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: AppColors.maroon,
           ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                _row('Asal Motif Tapis', motif.origin),
-                const SizedBox(height: 14),
-                _row('Deskripsi Singkat', motif.description, minH: 150),
-              ],
-            ),
-          ),
-          const SizedBox(height: 22),
 
           // Rekomendasi outfit
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Rekomendasi Outfit',
-                    style: AppText.serif(
-                      17,
-                      color: const Color(0xFF1E1E1E),
-                      weight: FontWeight.w700,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _outfitOpen = !_outfitOpen),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Rekomendasi Outfit',
+                      style: AppText.serif(
+                        17,
+                        color: const Color(0xFF1E1E1E),
+                        weight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () => context.push('/outfit-pick'),
-                  child: Container(
+                  Container(
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
                       color: _grey,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
-                      Icons.chevron_right,
+                    child: Icon(
+                      _outfitOpen
+                          ? Icons.keyboard_arrow_down
+                          : Icons.chevron_right,
                       size: 20,
                       color: AppColors.dark,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 124 * s,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: outfits.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (_, i) {
-                final o = outfits[i];
-                return GestureDetector(
-                  onTap: () => context.push('/outfit-pick'),
-                  child: SizedBox(
-                    width: 80 * s,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          AssetImg(o.image, alignment: Alignment.topCenter),
-                          const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Color(0x00000000), Color(0xAA000000)],
-                                stops: [0.55, 1],
+          Container(
+            height: 1.2,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: AppColors.dark,
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            alignment: Alignment.topCenter,
+            child: _outfitOpen
+                ? Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 124 * s,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: outfits.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 10),
+                          itemBuilder: (_, i) {
+                            final o = outfits[i];
+                            return GestureDetector(
+                              onTap: () => context.push('/outfit-pick'),
+                              child: SizedBox(
+                                width: 80 * s,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      AssetImg(
+                                        o.image,
+                                        alignment: Alignment.topCenter,
+                                      ),
+                                      const DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Color(0x00000000),
+                                              Color(0xAA000000),
+                                            ],
+                                            stops: [0.55, 1],
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        left: 6,
+                                        right: 6,
+                                        bottom: 6,
+                                        child: Text(
+                                          o.category.isEmpty
+                                              ? o.name
+                                              : o.category,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppText.sans(8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 6,
-                            right: 6,
-                            bottom: 6,
-                            child: Text(
-                              o.category.isEmpty ? o.name : o.category,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.sans(8),
-                            ),
-                          ),
-                        ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                      const SizedBox(height: 14),
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
           ),
-          const SizedBox(height: 14),
 
           _accordion(
             'Penggunaan',

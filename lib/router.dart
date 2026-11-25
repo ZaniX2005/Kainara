@@ -85,6 +85,10 @@ final router = GoRouter(
           builder: (_, _) => const NotificationPage(),
         ),
         GoRoute(path: '/profil', builder: (_, _) => const ProfilPage()),
+        GoRoute(
+          path: '/profil/nama',
+          builder: (_, _) => const EditNamaProfilPage(),
+        ),
         GoRoute(path: '/pengaturan', builder: (_, _) => const PengaturanPage()),
         GoRoute(
           path: '/pengaturan/notifikasi',

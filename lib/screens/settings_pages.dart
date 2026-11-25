@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../data/l10n.dart';
 import '../data/profile_store.dart';
 import '../data/auth_store.dart';
+import '../data/settings_store.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import '../widgets/settings_kit.dart';
@@ -18,7 +19,7 @@ class PengaturanPage extends StatelessWidget {
     return SettingsScaffold(
       title: tr('Pengaturan Akun'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 24, 18, 40),
+        padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
         children: [
           SettingsCard(
             children: [
@@ -45,21 +46,17 @@ class PengaturanPage extends StatelessWidget {
               SettingsTile(
                 icon: Icons.switch_account_outlined,
                 title: tr('Ganti Akun'),
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(tr('Fitur ganti akun segera hadir'))),
-                ),
+                onTap: () async {
+                  final switchAccount = await switchAccountDialog(context);
+                  if (switchAccount) AuthStore.instance.logout();
+                },
               ),
               SettingsTile(
                 icon: Icons.logout,
                 title: tr('Log Out'),
                 danger: true,
                 onTap: () async {
-                  final ok = await confirmDialog(
-                    context,
-                    title: tr('Log Out'),
-                    message: tr('Anda yakin ingin keluar dari akun ini?'),
-                    ok: tr('Keluar'),
-                  );
+                  final ok = await logoutDialog(context);
                   if (ok) AuthStore.instance.logout();
                 },
               ),
@@ -73,69 +70,63 @@ class PengaturanPage extends StatelessWidget {
 
 // ============================================================ NOTIFIKASI
 
-class NotifikasiSettingsPage extends StatefulWidget {
+class NotifikasiSettingsPage extends StatelessWidget {
   const NotifikasiSettingsPage({super.key});
-
-  @override
-  State<NotifikasiSettingsPage> createState() => _NotifikasiSettingsPageState();
-}
-
-class _NotifikasiSettingsPageState extends State<NotifikasiSettingsPage> {
-  bool _pause = false;
-  bool _motif = true;
-  bool _outfit = false;
 
   @override
   Widget build(BuildContext context) {
     return SettingsScaffold(
       title: tr('Notifikasi'),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 24, 18, 40),
-        children: [
-          SettingsCard(
+      body: ListenableBuilder(
+        listenable: SettingsStore.instance,
+        builder: (context, _) {
+          final settings = SettingsStore.instance;
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
             children: [
-              SettingsTile(
-                icon: Icons.notifications_paused_outlined,
-                title: tr('Jeda semua'),
-                subtitle: tr('Jeda semua notifikasi sementara'),
-                trailing: KSwitch(
-                  value: _pause,
-                  onChanged: (v) => setState(() {
-                    _pause = v;
-                    if (v) {
-                      _motif = false;
-                      _outfit = false;
-                    }
-                  }),
-                ),
+              SettingsCard(
+                children: [
+                  SettingsTile(
+                    icon: Icons.notifications_paused_outlined,
+                    title: tr('Jeda semua'),
+                    subtitle: tr('Jeda semua notifikasi sementara'),
+                    trailing: KSwitch(
+                      value: settings.pauseNotifications,
+                      onChanged: settings.setPauseNotifications,
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: Icons.auto_awesome_outlined,
+                    title: tr('Motif Tapis'),
+                    subtitle: tr('Notifikasi motif tapis aktif'),
+                    trailing: KSwitch(
+                      value: settings.motifNotificationsActive,
+                      onChanged: settings.setMotifNotifications,
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: Icons.checkroom_outlined,
+                    title: tr('Rekomendasi Outfit'),
+                    subtitle: tr('Notifikasi rekomendasi outfit aktif'),
+                    trailing: KSwitch(
+                      value: settings.outfitNotificationsActive,
+                      onChanged: settings.setOutfitNotifications,
+                    ),
+                  ),
+                ],
               ),
-              SettingsTile(
-                icon: Icons.auto_awesome_outlined,
-                title: tr('Motif Tapis'),
-                subtitle: tr('Notifikasi motif tapis aktif'),
-                trailing: KSwitch(
-                  value: _motif,
-                  onChanged: (v) => setState(() {
-                    _motif = v;
-                    if (v) _pause = false;
-                  }),
-                ),
-              ),
-              SettingsTile(
-                icon: Icons.checkroom_outlined,
-                title: tr('Rekomendasi Outfit'),
-                subtitle: tr('Notifikasi rekomendasi outfit aktif'),
-                trailing: KSwitch(
-                  value: _outfit,
-                  onChanged: (v) => setState(() {
-                    _outfit = v;
-                    if (v) _pause = false;
-                  }),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+                child: Text(
+                  tr(
+                    'Preferensi berlaku selama aplikasi berjalan. Pengiriman notifikasi push belum tersedia tanpa layanan notifikasi.',
+                  ),
+                  style: AppText.sans(11, color: Colors.black45, height: 1.5),
                 ),
               ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -166,10 +157,8 @@ class _BahasaPageState extends State<BahasaPage> {
           const _Lang('English', 'Inggris'),
         ];
   static const _available = [
-    _Lang('Jawa', 'Bahasa Jawa'),
-    _Lang('Lampung', 'Bahasa Lampung'),
-    _Lang('Sunda', 'Bahasa Sunda'),
-    _Lang('Melayu', 'Bahasa Melayu'),
+    _Lang('Indonesia', 'Bahasa Indonesia'),
+    _Lang('English', 'Inggris'),
   ];
   bool _edit = false;
 
@@ -206,7 +195,11 @@ class _BahasaPageState extends State<BahasaPage> {
         ),
         child: Text(
           tr(_edit ? 'Selesai' : 'Edit'),
-          style: AppText.sans(11, weight: FontWeight.w700),
+          style: AppText.sans(
+            11,
+            color: _edit ? Colors.white : AppColors.maroon,
+            weight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -429,68 +422,56 @@ class _BahasaPageState extends State<BahasaPage> {
 
 // ============================================================ PRIVASI & KEAMANAN
 
-class PrivasiPage extends StatefulWidget {
+class PrivasiPage extends StatelessWidget {
   const PrivasiPage({super.key});
-
-  @override
-  State<PrivasiPage> createState() => _PrivasiPageState();
-}
-
-class _PrivasiPageState extends State<PrivasiPage> {
-  bool _saveLogin = true;
 
   @override
   Widget build(BuildContext context) {
     return SettingsScaffold(
       title: tr('Privasi & Keamanan'),
       background: kBgGreen,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-        children: [
-          SettingsCard(
+      body: ListenableBuilder(
+        listenable: SettingsStore.instance,
+        builder: (context, _) {
+          final settings = SettingsStore.instance;
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
             children: [
-              SettingsTile(
-                icon: Icons.verified_user_outlined,
-                title: tr('Pemeriksaan Keamanan'),
-                onTap: () => context.push('/pengaturan/keamanan'),
-              ),
-              SettingsTile(
-                icon: Icons.smartphone,
-                title: tr('Perangkat Anda'),
-                onTap: () => context.push('/pengaturan/perangkat'),
+              SettingsCard(
+                children: [
+                  SettingsTile(
+                    icon: Icons.verified_user_outlined,
+                    title: tr('Pemeriksaan Keamanan'),
+                    onTap: () => context.push('/pengaturan/keamanan'),
+                  ),
+                  SettingsTile(
+                    icon: Icons.smartphone,
+                    title: tr('Perangkat Anda'),
+                    onTap: () => context.push('/pengaturan/perangkat'),
+                  ),
+                  SettingsTile(
+                    icon: Icons.key_outlined,
+                    title: tr('Simpan info login'),
+                    chevron: false,
+                    trailing: KSwitch(
+                      value: settings.saveLoginInfo,
+                      onChanged: settings.setSaveLoginInfo,
+                    ),
+                  ),
+                ],
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SettingsTile(
-                      icon: Icons.vpn_key_outlined,
-                      title: tr('Simpan info login'),
-                      trailing: KSwitch(
-                        value: _saveLogin,
-                        onChanged: (v) => setState(() => _saveLogin = v),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        tr(
-                          'Semua info login yang disimpan untuk akun ini akan dihapus jika pengaturan ini dinonaktifkan.',
-                        ),
-                        style: AppText.sans(
-                          10,
-                          color: Colors.black45,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(
+                  tr(
+                    'Semua info login yang disimpan untuk akun ini akan dihapus jika pengaturan ini dinonaktifkan.',
+                  ),
+                  style: AppText.sans(11, color: Colors.black54, height: 1.5),
                 ),
               ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -564,7 +545,7 @@ class KeamananPage extends StatelessWidget {
                     ),
                     content: Text(
                       tr(
-                        'Tidak ada aktivitas mencurigakan pada akun Anda dalam 7 hari terakhir.',
+                        'Pemeriksaan aktivitas memerlukan layanan akun dan belum tersedia dalam mode demo.',
                       ),
                       style: AppText.sans(
                         13,
@@ -630,7 +611,26 @@ class PasswordEmailPage extends StatelessWidget {
                         initial: p.email,
                         hint: tr('nama@email.com'),
                       );
-                      if (v != null && v.contains('@')) p.update(email: v);
+                      if (v == null) return;
+                      final result = AuthStore.instance.updateEmail(v);
+                      if (!context.mounted) return;
+                      final message = switch (result) {
+                        AccountUpdateResult.ok => tr('Email diperbarui.'),
+                        AccountUpdateResult.invalidEmail => tr(
+                          'Masukkan alamat email yang valid.',
+                        ),
+                        AccountUpdateResult.emailAlreadyExists => tr(
+                          'Email sudah digunakan.',
+                        ),
+                        AccountUpdateResult.accountNotFound => tr(
+                          'Akun demo tidak ditemukan.',
+                        ),
+                        AccountUpdateResult.weakPassword => null,
+                      };
+                      if (message != null) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text(message)));
+                      }
                     },
                   ),
                   SettingsTile(
@@ -644,14 +644,26 @@ class PasswordEmailPage extends StatelessWidget {
                         hint: tr('Minimal 6 karakter'),
                         obscure: true,
                       );
-                      if (v != null && v.length >= 6) {
-                        p.update(password: v);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('Password diperbarui'))),
-                          );
-                        }
-                      }
+                      if (v == null) return;
+                      final result = AuthStore.instance.updatePassword(v);
+                      if (!context.mounted) return;
+                      final message = switch (result) {
+                        AccountUpdateResult.ok => tr('Password diperbarui'),
+                        AccountUpdateResult.weakPassword => tr(
+                          'Password harus minimal 6 karakter.',
+                        ),
+                        AccountUpdateResult.accountNotFound => tr(
+                          'Akun demo tidak ditemukan.',
+                        ),
+                        AccountUpdateResult.emailAlreadyExists => tr(
+                          'Email sudah terdaftar.',
+                        ),
+                        AccountUpdateResult.invalidEmail => tr(
+                          'Masukkan alamat email yang valid.',
+                        ),
+                      };
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text(message)));
                     },
                   ),
                 ],
@@ -674,109 +686,82 @@ class PerangkatPage extends StatefulWidget {
 }
 
 class _PerangkatPageState extends State<PerangkatPage> {
-  final List<(String, String, IconData)> _others = [
-    ('Chrome', 'Kainara web', Icons.public),
-  ];
-
-  Widget _deviceCard({
-    required IconData icon,
-    required String name,
-    required Widget sub,
-    required Widget trailing,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF1E4DA)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: kIconBg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF0DCC0)),
-            ),
-            child: Icon(icon, size: 26, color: AppColors.goldDeep),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: AppText.sans(
-                    14,
-                    color: Colors.black,
-                    weight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                sub,
-                const SizedBox(height: 3),
-                Text(
-                  tr('26 Oktober 2025 08.56 WIB'),
-                  style: AppText.sans(10, color: Colors.black38),
-                ),
-              ],
-            ),
-          ),
-          trailing,
-        ],
-      ),
-    );
-  }
+  bool _otherDeviceActive = true;
 
   @override
   Widget build(BuildContext context) {
+    Widget deviceCard({
+      required IconData icon,
+      required String name,
+      required String app,
+      required Widget trailing,
+    }) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFF1E4DA)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: kIconBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFF0DCC0)),
+              ),
+              child: Icon(icon, size: 26, color: AppColors.goldDeep),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppText.sans(
+                      14,
+                      color: Colors.black,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(app, style: AppText.sans(11, color: Colors.black54)),
+                  const SizedBox(height: 3),
+                  Text(
+                    tr('26 Oktober 2025 08.56 WIB'),
+                    style: AppText.sans(10, color: Colors.black38),
+                  ),
+                ],
+              ),
+            ),
+            trailing,
+          ],
+        ),
+      );
+    }
+
     return SettingsScaffold(
       title: tr('Kelola Perangkat'),
       background: kBgGreen,
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+        padding: const EdgeInsets.fromLTRB(20, 40, 20, 40),
         children: [
           SectionLabel(tr('Perangkat saat ini')),
-          _deviceCard(
+          deviceCard(
             icon: Icons.smartphone,
             name: 'Samsung Galaxy S26 Ultra',
-            sub: Row(
-              children: [
-                Text(
-                  tr('Aplikasi'),
-                  style: AppText.sans(11, color: Colors.black54),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: const BoxDecoration(
-                    color: Colors.black26,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  tr('Sesi Utama'),
-                  style: AppText.sans(
-                    11,
-                    color: AppColors.maroon,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+            app: tr('Aplikasi'),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -794,54 +779,43 @@ class _PerangkatPageState extends State<PerangkatPage> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          SectionLabel(tr('Perangkat lain tempat anda masuk')),
-          for (final d in List.of(_others)) ...[
-            _deviceCard(
-              icon: d.$3,
-              name: d.$1,
-              sub: Text(d.$2, style: AppText.sans(11, color: Colors.black54)),
-              trailing: GestureDetector(
-                onTap: () async {
+          if (_otherDeviceActive) ...[
+            const SizedBox(height: 26),
+            SectionLabel(tr('Perangkat lain tempat anda masuk')),
+            deviceCard(
+              icon: Icons.language,
+              name: 'Chrome',
+              app: 'Kainara web',
+              trailing: TextButton(
+                onPressed: () async {
                   final ok = await confirmDialog(
                     context,
                     title: tr('Keluar dari perangkat'),
-                    message: '${tr('Keluarkan akun Anda dari')} ${d.$1}?',
+                    message: '${tr('Keluarkan akun Anda dari')} Chrome?',
                     ok: tr('Keluar'),
                   );
-                  if (ok) setState(() => _others.remove(d));
+                  if (ok && mounted) {
+                    setState(() => _otherDeviceActive = false);
+                  }
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFE11D48),
+                  backgroundColor: const Color(0xFFFFF0F1),
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFF5C2C7)),
                   ),
-                  child: Text(
-                    tr('Keluar'),
-                    style: AppText.sans(
-                      11,
-                      color: const Color(0xFFC0182B),
-                      weight: FontWeight.w600,
-                    ),
+                ),
+                child: Text(
+                  tr('Keluar'),
+                  style: AppText.sans(
+                    11,
+                    color: const Color(0xFFE11D48),
+                    weight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
           ],
-          if (_others.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                tr('Tidak ada perangkat lain'),
-                style: AppText.sans(12, color: Colors.black38),
-              ),
-            ),
         ],
       ),
     );

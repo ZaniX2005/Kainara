@@ -82,6 +82,14 @@ void main() {
           'assets/images/auth_header.png';
     });
     expect(tester.getSize(header).width, screenSize.width);
+    final overlayFinder = find.byWidgetPredicate(
+      (widget) => widget is AnnotatedRegion<SystemUiOverlayStyle>,
+    );
+    expect(overlayFinder, findsWidgets);
+    final overlay = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      overlayFinder.first,
+    );
+    expect(overlay.value.statusBarColor, Colors.transparent);
     expect(
       find.byWidgetPredicate((widget) {
         if (widget is! Image || widget.image is! AssetImage) return false;

@@ -81,6 +81,7 @@ class _OtpPageState extends State<OtpPage> {
     final timer = '00:${_left.toString().padLeft(2, '0')}';
     return AuthScaffold(
       overlays: (s) => [
+        authGreeting(s, 'Tabik Pun, selamat\ndatang di KAINARA'),
         ...authTitle(
           s,
           text: 'kode OTP',

@@ -34,6 +34,8 @@ class Outfit {
   final String image;
   final String category; // Outer, Blazer, dll
   final String description;
+  final String gender;
+  final String style;
 
   const Outfit({
     this.name = 'Nama Outfit',
@@ -41,5 +43,7 @@ class Outfit {
     required this.image,
     this.category = '',
     this.description = '',
+    this.gender = 'Unisex',
+    this.style = 'Kasual',
   });
 }

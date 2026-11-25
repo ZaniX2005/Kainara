@@ -80,31 +80,43 @@ const outfits = <Outfit>[
     image: 'assets/images/outfit/outfit_1.png',
     category: 'Dress',
     description: 'Tapis ini disulam penuh dengan benang emas.',
+    gender: 'Wanita',
+    style: 'Semi-Formal',
   ),
   Outfit(
     image: 'assets/images/outfit/outfit_2.png',
     category: 'Adat',
     description: 'Tapis ini umumnya digunakan oleh istri dari tokoh adat.',
+    gender: 'Wanita',
+    style: 'Semi-Formal',
   ),
   Outfit(
     image: 'assets/images/outfit/outfit_3.png',
     category: 'Blazer',
     description: 'Kain ini dipakai oleh pengantin wanita atau tokoh adat.',
+    gender: 'Wanita',
+    style: 'Semi-Formal',
   ),
   Outfit(
     image: 'assets/images/outfit/outfit_4.png',
     category: 'Outer',
     description: 'Dikenal dengan corak yang lebih spesifik, Tapis ini dipakai pada upacara adat.',
+    gender: 'Wanita',
+    style: 'Kasual',
   ),
   Outfit(
     image: 'assets/images/outfit/outfit_5.png',
     category: 'Adat',
     description:
         'Tapis Balak (yang berarti "besar") adalah lambang kebesaran adat.',
+    gender: 'Wanita',
+    style: 'Semi-Formal',
   ),
   Outfit(
     image: 'assets/images/outfit/outfit_6.png',
     category: 'Adat',
     description: 'Memiliki corak khas yang biasanya dipakai oleh perempuan dalam acara adat.',
+    gender: 'Unisex',
+    style: 'Semi-Formal',
   ),
 ];

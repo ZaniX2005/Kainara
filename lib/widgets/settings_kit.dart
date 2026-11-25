@@ -1,6 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/l10n.dart';
+import '../data/profile_store.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 
@@ -8,7 +12,7 @@ const kBgWarm = Color(0xFFFFFAF3);
 const kBgGreen = Color(0xFFF8F9EE);
 const kIconBg = Color(0xFFFAF0E4);
 
-/// Kerangka halaman: header maroon melengkung + tombol kembali.
+/// Kerangka halaman pengaturan dengan header terang dan tombol kembali maroon.
 class SettingsScaffold extends StatelessWidget {
   final String title;
   final Color background;
@@ -34,32 +38,40 @@ class SettingsScaffold extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(18, mq.padding.top + 12, 18, 16),
-            decoration: const BoxDecoration(
-              color: AppColors.maroon,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-            ),
+            padding: EdgeInsets.fromLTRB(20, mq.padding.top + 10, 20, 10),
+            color: background,
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () =>
-                      context.canPop() ? context.pop() : context.go('/profil'),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF7EEE9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.chevron_left,
-                      color: AppColors.maroon,
-                      size: 28,
+                Material(
+                  color: AppColors.maroon,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => context.canPop()
+                        ? context.pop()
+                        : context.go('/profil'),
+                    child: const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        Icons.chevron_left,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(title, style: AppText.serif(22))),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppText.serif(
+                      22,
+                      color: AppColors.maroon,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
+                ),
                 ?trailing,
               ],
             ),
@@ -283,38 +295,55 @@ Future<String?> promptText(
   String initial = '',
   String hint = '',
   bool obscure = false,
+  int? maxLength,
 }) {
   final c = TextEditingController(text: initial);
   return showDialog<String>(
     context: context,
-    builder: (_) => AlertDialog(
-      backgroundColor: Colors.white,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: kBgWarm,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(title, style: AppText.serif(20, color: AppColors.maroon)),
       content: TextField(
         controller: c,
         obscureText: obscure,
         autofocus: true,
+        maxLength: maxLength,
         style: AppText.sans(14, color: AppColors.dark),
-        decoration: InputDecoration(hintText: hint),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Batal',
-            style: AppText.serif(16, color: AppColors.maroon),
+        decoration: InputDecoration(
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE9D7BF)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE9D7BF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.maroon),
           ),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, c.text.trim()),
-          child: Text(
-            'Simpan',
-            style: AppText.serif(
-              16,
-              color: AppColors.maroon,
-              weight: FontWeight.w700,
-            ),
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.maroon,
+            side: const BorderSide(color: AppColors.maroon),
           ),
+          child: Text(
+            tr('Batal'),
+            style: AppText.sans(13, color: AppColors.maroon),
+          ),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext, c.text.trim()),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.maroon),
+          child: Text(tr('Simpan'), style: AppText.sans(13)),
         ),
       ],
     ),
@@ -329,34 +358,419 @@ Future<bool> confirmDialog(
 }) async {
   final r = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
-      backgroundColor: Colors.white,
-      title: Text(title, style: AppText.serif(20, color: AppColors.maroon)),
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: kBgWarm,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        title,
+        textAlign: TextAlign.center,
+        style: AppText.serif(20, color: AppColors.maroon),
+      ),
       content: Text(
         message,
+        textAlign: TextAlign.center,
         style: AppText.sans(13, color: AppColors.dark, height: 1.5),
       ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.maroon,
+            side: const BorderSide(color: Color(0xFFBDBDBD)),
+            minimumSize: const Size(110, 44),
+          ),
           child: Text(
-            'Batal',
-            style: AppText.serif(16, color: AppColors.maroon),
+            tr('Batal'),
+            style: AppText.sans(12, color: AppColors.maroon),
           ),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(
-            ok,
-            style: AppText.serif(
-              16,
-              color: AppColors.maroon,
-              weight: FontWeight.w700,
-            ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.maroon,
+            minimumSize: const Size(110, 44),
           ),
+          child: Text(ok, style: AppText.sans(12)),
         ),
       ],
     ),
   );
   return r ?? false;
+}
+
+Future<bool> switchAccountDialog(BuildContext context) async {
+  final profile = ProfileStore.instance;
+  final result = await showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Tutup',
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 180),
+    pageBuilder: (dialogContext, _, _) {
+      final mq = MediaQuery.of(dialogContext);
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(dialogContext, false),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Material(
+              color: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    10,
+                    16,
+                    mq.viewPadding.bottom + 24,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 38,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD9D9D9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        tr('Ganti Akun'),
+                        style: AppText.serif(
+                          24,
+                          color: AppColors.maroon,
+                          weight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        tr('Pilih akun yang ingin Anda gunakan.'),
+                        style: AppText.sans(
+                          14,
+                          color: const Color(0xFF3D3D3D),
+                          weight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _AccountChoice(
+                        name: profile.name,
+                        email: profile.email,
+                        active: true,
+                        onTap: () => Navigator.pop(dialogContext, false),
+                      ),
+                      const SizedBox(height: 12),
+                      _AccountChoice(
+                        name: 'Yanto Mulyanto',
+                        email: 'Yanto.Mulyanto236@example.com',
+                        active: false,
+                        onTap: () => Navigator.pop(dialogContext, true),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.maroon,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add, size: 20),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    tr('Tambahkan akun lain'),
+                                    style: AppText.sans(
+                                      16,
+                                      color: Colors.white,
+                                      weight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Text(
+                          tr('Anda tidak perlu keluar dari akun saat ini.'),
+                          textAlign: TextAlign.center,
+                          style: AppText.sans(
+                            11,
+                            color: const Color(0xFF777777),
+                            weight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+    transitionBuilder: (context, animation, _, child) {
+      final offset = Tween(
+        begin: const Offset(0, 1),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.easeOutCubic)).animate(animation);
+      return SlideTransition(position: offset, child: child);
+    },
+  );
+  return result ?? false;
+}
+
+Future<bool> logoutDialog(BuildContext context) async {
+  final result = await showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Tutup',
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 180),
+    pageBuilder: (dialogContext, _, _) => Stack(
+      children: [
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(dialogContext, false),
+            child: Container(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+        ),
+        Center(
+          child: AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(22, 28, 22, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  tr('Logout dari akun'),
+                  textAlign: TextAlign.center,
+                  style: AppText.serif(
+                    24,
+                    color: AppColors.maroon,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  tr(
+                    'Apakah Anda yakin ingin keluar?\nAnda perlu masuk kembali untuk\nmengakses akun Anda.',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: AppText.sans(
+                    16,
+                    color: const Color(0xFF4A382F),
+                    weight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.maroon,
+                          side: const BorderSide(color: Color(0xFFBFC1C4)),
+                          minimumSize: const Size(0, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          tr('Batal'),
+                          style: AppText.serif(
+                            14,
+                            color: AppColors.maroon,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.maroon,
+                          minimumSize: const Size(0, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          tr('Ya, logout'),
+                          textAlign: TextAlign.center,
+                          style: AppText.serif(
+                            14,
+                            color: Colors.white,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+    transitionBuilder: (context, animation, _, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
+  return result ?? false;
+}
+
+class _AccountChoice extends StatelessWidget {
+  final String name;
+  final String email;
+  final bool active;
+  final VoidCallback? onTap;
+
+  const _AccountChoice({
+    required this.name,
+    required this.email,
+    required this.active,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: active ? AppColors.maroon : const Color(0xFFE0E0E0),
+              width: active ? 1.5 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(14, 14, active ? 66 : 14, 14),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 19,
+                    backgroundColor: AppColors.maroon,
+                    child: Text(
+                      name.isEmpty ? '?' : name.trim()[0].toUpperCase(),
+                      style: AppText.serif(
+                        14,
+                        color: Colors.white,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.serif(
+                            14,
+                            color: const Color(0xFF2B1A12),
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.sans(
+                            12,
+                            color: const Color(0xFF4A4A4A),
+                            weight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!active)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: AppColors.maroon,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (active)
+          Positioned(
+            top: 14,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.maroon,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                tr('Aktif'),
+                style: AppText.sans(
+                  10,
+                  color: Colors.white,
+                  weight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

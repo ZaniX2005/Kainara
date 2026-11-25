@@ -73,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return AuthScaffold(
       overlays: (s) => [
+        authGreeting(s, 'Tabik Pun, selamat\ndatang di KAINARA'),
         ...authTitle(s, text: 'Sign In', big: true),
         authLabel(s, 'Email', 429),
         authLabel(s, 'Password', 503),

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'auth_header.dart';
@@ -65,33 +66,40 @@ class AuthScaffold extends StatelessWidget {
     final s = w / kAuthW;
     final h = math.max(size.height, kAuthH * s);
 
-    return Scaffold(
-      backgroundColor: AuthColors.cream,
-      resizeToAvoidBottomInset: true,
-      body: Center(
-        child: SizedBox(
-          width: w,
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: SizedBox(
-              height: h,
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  Positioned.fill(child: AuthHeader(s: s)),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 99 * s,
-                    child: Image.asset(
-                      'assets/images/auth_ornament.png',
-                      fit: BoxFit.fill,
-                      filterQuality: FilterQuality.high,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AuthColors.cream,
+        resizeToAvoidBottomInset: true,
+        body: Center(
+          child: SizedBox(
+            width: w,
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: SizedBox(
+                height: h,
+                child: Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: [
+                    Positioned.fill(child: AuthHeader(s: s)),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 99 * s,
+                      child: Image.asset(
+                        'assets/images/auth_ornament.png',
+                        fit: BoxFit.fill,
+                        filterQuality: FilterQuality.high,
+                      ),
                     ),
-                  ),
-                  ...overlays(s),
-                ],
+                    ...overlays(s),
+                  ],
+                ),
               ),
             ),
           ),
@@ -148,7 +156,7 @@ Widget authLabel(double s, String text, double top, {double left = 32}) {
       text,
       style: authText(
         14,
-        color: Colors.white,
+        color: AuthColors.maroon,
         weight: FontWeight.w500,
         height: 1,
       ),

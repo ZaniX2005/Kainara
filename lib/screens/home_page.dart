@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/l10n.dart';
@@ -49,13 +50,16 @@ class _HomePageState extends State<HomePage> {
   static const _headerH = 73.0; // 120 - 47
   static const _heroBodyH = 381.0; // 428 - 47
   static const _bannerTop = 38.0; // 85 - 47
-  static const _tabsH = 30.0;
+  static const _tabsH = 36.0;
+  static const _bannerTabsGap = 10.0;
 
   final _search = TextEditingController();
   late final PageController _pc = PageController(initialPage: _loopStart);
   Timer? _timer;
   final Set<String> _motifSel = {};
   final Set<String> _outfitSel = {};
+  final Set<String> _outfitGenderSel = {};
+  final Set<String> _outfitStyleSel = {};
   int _tab = 1; // 0 = Rekomendasi Outfit, 1 = Motif Tapis
   int _raw = _loopStart;
   int _page = 0;
@@ -90,6 +94,10 @@ class _HomePageState extends State<HomePage> {
       final sel = _sel;
       if (label == 'Semua') {
         sel.clear();
+        if (_tab == 0) {
+          _outfitGenderSel.clear();
+          _outfitStyleSel.clear();
+        }
       } else if (!sel.remove(label)) {
         sel.add(label);
       }
@@ -100,7 +108,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final s = mq.size.width / 390;
-    final topInset = mq.padding.top;
+    final topInset = mq.padding.top < 47 ? 47.0 : mq.padding.top;
     final toolbarH = topInset + _headerH; // 120 pada inset 47
     final heroH = topInset + _heroBodyH; // 428: hero tanpa tab
     const tabsH = _tabsH;
@@ -114,6 +122,11 @@ class _HomePageState extends State<HomePage> {
             primary: false,
             pinned: true,
             automaticallyImplyLeading: false,
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
@@ -123,13 +136,10 @@ class _HomePageState extends State<HomePage> {
             expandedHeight: totalH,
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(tabsH),
-              child: Container(
-                color: AppColors.page,
-                child: SlantedTabs(
-                  selected: _tab,
-                  onChanged: (i) => setState(() => _tab = i),
-                  height: tabsH,
-                ),
+              child: SlantedTabs(
+                selected: _tab,
+                onChanged: (i) => setState(() => _tab = i),
+                height: tabsH,
               ),
             ),
             flexibleSpace: LayoutBuilder(
@@ -160,9 +170,6 @@ class _HomePageState extends State<HomePage> {
   ) {
     final fadeOut = (1 - t * 3).clamp(0.0, 1.0);
     final searchTop = (topInset + 73) + ((topInset + 15) - (topInset + 73)) * t;
-
-    // Overlay maroon di atas banner: solid sampai header (topInset + 73),
-    // lalu memudar habis di topInset + 135 seperti di desain.
     final fadeEnd = topInset + 135;
     final fadeStop = ((topInset + _headerH) / fadeEnd).clamp(0.0, 1.0);
 
@@ -173,7 +180,7 @@ class _HomePageState extends State<HomePage> {
             top: 0,
             left: 0,
             right: 0,
-            height: totalH,
+            height: totalH - tabsH - _bannerTabsGap,
             child: ColoredBox(
               color: AppColors.page,
               child: ClipRect(
@@ -207,26 +214,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 30,
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 1 - t,
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x00FFFAF3), Color(0xFFFFFAF3)],
                     ),
                   ),
                 ),
@@ -300,7 +287,7 @@ class _HomePageState extends State<HomePage> {
             ),
           Positioned(
             left: 22,
-            bottom: 26,
+            bottom: 61,
             child: Opacity(
               opacity: fadeOut,
               child: Row(
@@ -515,7 +502,7 @@ class _HomePageState extends State<HomePage> {
   Widget _chipRow() {
     final sel = _sel;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 31, 18, 24),
+      padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
       child: Row(
         children: [
           for (final label in _chips) ...[
@@ -596,8 +583,6 @@ class _HomePageState extends State<HomePage> {
             description: m.summary.isNotEmpty ? m.summary : m.description,
             favKey: 'motif:${m.id}',
             imageHeight: 190 * s,
-            placeholder: true,
-            placeholderLabel: tr('Gambar Tapis'),
             onTap: () => context.push('/motif/${m.id}'),
           );
         }, childCount: list.length),
@@ -621,8 +606,7 @@ class _HomePageState extends State<HomePage> {
             favKey: 'outfit:${o.image}',
             imageHeight: 190 * s,
             montserrat: true,
-            placeholder: true,
-            placeholderLabel: tr('Gambar Outfit'),
+            onTap: () => context.push('/outfit-pick'),
           );
         }, childCount: list.length),
       ),
@@ -646,21 +630,48 @@ class _HomePageState extends State<HomePage> {
     return outfits.where((o) {
       final text = '${o.name} ${o.category} ${o.description}'.toLowerCase();
       final okQ = q.isEmpty || text.contains(q);
-      final okF = _outfitSel.isEmpty || _outfitSel.contains(o.category);
-      return okQ && okF;
+      final okType = _outfitSel.isEmpty || _outfitSel.contains(o.category);
+      final okGender =
+          _outfitGenderSel.isEmpty || _outfitGenderSel.contains(o.gender);
+      final okStyle =
+          _outfitStyleSel.isEmpty || _outfitStyleSel.contains(o.style);
+      return okQ && okType && okGender && okStyle;
     }).toList();
   }
 
   // ------------------------------------------------------------ FILTER SHEET
 
   Future<void> _openFilterSheet() async {
-    final result = await showRegionFilterDialog(context, selected: _motifSel);
-    if (result != null) {
+    if (_tab == 1) {
+      final result = await showRegionFilterDialog(context, selected: _motifSel);
+      if (result == null) return;
       setState(() {
         _motifSel
           ..clear()
           ..addAll(result);
       });
+      return;
     }
+
+    final result = await showOutfitFilterDialog(
+      context,
+      initial: OutfitFilter(
+        types: _outfitSel,
+        genders: _outfitGenderSel,
+        styles: _outfitStyleSel,
+      ),
+    );
+    if (result == null) return;
+    setState(() {
+      _outfitSel
+        ..clear()
+        ..addAll(result.types);
+      _outfitGenderSel
+        ..clear()
+        ..addAll(result.genders);
+      _outfitStyleSel
+        ..clear()
+        ..addAll(result.styles);
+    });
   }
 }
